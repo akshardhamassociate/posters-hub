@@ -110,6 +110,44 @@ header.top{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,va
 .previewer .pimg img{max-width:100%;max-height:78vh;border-radius:12px;}
 .previewer .pbar{padding:16px;display:flex;gap:10px;}
 .previewer .pbar button{flex:1;padding:14px;border-radius:13px;font-weight:700;color:#fff;}
+
+/* ── Multi-Select ── */
+.sel-toggle{flex:0 0 auto;background:#f1e9dc;color:var(--muted);padding:6px 12px;border-radius:9px;font-size:13px;font-weight:700;border:none;cursor:pointer;}
+.sel-toggle.active{background:var(--brand);color:#fff;}
+.card.selected{outline:3px solid var(--brand);outline-offset:-3px;}
+.card .sel-cb{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:7px;border:2.5px solid #fff;background:rgba(255,255,255,.35);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:5;cursor:pointer;}
+.sel-mode .card .sel-cb{display:flex;}
+.sel-mode .card .sel-cb.checked{background:var(--brand);border-color:var(--brand);}
+.bulk-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:680px;z-index:60;background:var(--ink);padding:14px 16px 28px;display:none;gap:10px;flex-direction:column;}
+.bulk-bar.open{display:flex;}
+.bulk-bar .bulk-top{display:flex;align-items:center;justify-content:space-between;}
+.bulk-bar .bulk-count{color:#fff;font-weight:700;font-size:15px;}
+.bulk-bar .bulk-clear{color:rgba(255,255,255,.55);font-size:13px;font-weight:600;}
+.bulk-bar .bulk-actions{display:flex;gap:10px;}
+.bulk-bar .bulk-actions button{flex:1;padding:13px;border-radius:13px;font-weight:700;font-size:14px;color:#fff;}
+.bulk-send{background:var(--wa);}
+.bulk-copy{background:#444;}
+
+/* ── Templates Sheet ── */
+.tpl-section{margin-bottom:18px;}
+.tpl-section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.tpl-section-head h4{font-size:14px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:6px;margin:0;}
+.tpl-stage-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);}
+.tpl-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 12px;margin-bottom:8px;display:flex;gap:8px;align-items:flex-start;}
+.tpl-card .tpl-body{flex:1;font-size:13px;color:var(--ink);line-height:1.45;word-break:break-word;}
+.tpl-card .tpl-actions{display:flex;gap:6px;flex-shrink:0;}
+.tpl-card .tpl-copy{background:var(--brand-soft);color:var(--brand-dark);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:700;}
+.tpl-card .tpl-del{background:#fcecec;color:var(--danger);border-radius:8px;padding:5px 8px;font-size:13px;font-weight:700;}
+.tpl-add-area{background:#f8f4ee;border-radius:12px;padding:12px;}
+.tpl-add-area select{width:100%;border:1px solid var(--line-strong);border-radius:10px;padding:10px 12px;background:#fff;outline:none;margin-bottom:8px;font-weight:600;font-size:14px;}
+.tpl-add-area textarea{width:100%;border:1px solid var(--line-strong);border-radius:10px;padding:10px 12px;background:#fff;outline:none;resize:vertical;min-height:72px;font-size:14px;line-height:1.45;margin-bottom:8px;}
+.tpl-add-area textarea:focus,.tpl-add-area select:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft);}
+.tpl-add-area button{width:100%;background:var(--ink);color:#fff;border-radius:10px;padding:11px;font-weight:700;font-size:14px;}
+.tpl-empty{font-size:13px;color:var(--muted);padding:6px 2px;}
+.fab-row{position:fixed;right:max(16px,calc(50% - 340px + 16px));bottom:22px;z-index:50;display:flex;flex-direction:column;gap:10px;align-items:flex-end;}
+.fab{position:static;}
+.fab-tpl{background:linear-gradient(140deg,#2b2b35,#15151c);color:#fff;padding:13px 18px;border-radius:14px;font-weight:800;font-size:14px;box-shadow:0 10px 24px -6px rgba(31,24,16,.5);display:flex;align-items:center;gap:8px;transition:transform .1s;border:none;cursor:pointer;}
+.fab-tpl:active{transform:scale(.95);}
 </style>
 </head>
 <body>
@@ -147,12 +185,18 @@ header.top{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,va
 
   <div class="countbar">
     <span class="n" id="countTxt">0 posters</span>
-    <button class="manage" onclick="openManage()">⚙️ Categories</button>
+    <div style="display:flex;gap:8px">
+      <button class="sel-toggle" id="selToggleBtn" onclick="toggleSelectMode()">☑️ Select</button>
+      <button class="manage" onclick="openManage()">⚙️ Categories</button>
+    </div>
   </div>
   <div id="gridWrap"></div>
 </div>
 
-<button class="fab" onclick="openAdd()">＋ Add Poster</button>
+<div class="fab-row">
+  <button class="fab" onclick="openAdd()">＋ Add Poster</button>
+  <button class="fab-tpl" onclick="openTemplates()">💬 Templates</button>
+</div>
 
 <!-- ADD/EDIT -->
 <div class="overlay" id="addOverlay">
@@ -213,7 +257,36 @@ header.top{position:sticky;top:0;z-index:40;background:linear-gradient(180deg,va
   <div class="pimg" id="pImgWrap"></div>
   <div class="pbar">
     <button style="background:var(--wa)" id="pSend">📤 Send</button>
-    <button style="background:var(--ink)" id="pDl">⬇️ Download</button>
+    <button style="background:var(--ink)" id="pDl">📥 Download + Open WA</button>
+  </div>
+</div>
+
+<!-- TEMPLATES -->
+<div class="overlay" id="tplOverlay">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h2>💬 Message Templates</h2>
+    <div class="sub">Stage-wise templates — ek click mein copy karo</div>
+    <div id="tplList"></div>
+    <div class="tpl-add-area">
+      <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:8px;">+ Naya Template Add Karo</div>
+      <select id="tplStageSelect"></select>
+      <textarea id="tplMsgInput" placeholder="Message type karo... e.g. Namaste ji! Akshardham Associates ki taraf se..."></textarea>
+      <button onclick="addTemplate()">✅ Template Save Karo</button>
+    </div>
+    <button class="savebtn" style="background:#f1e9dc;color:var(--muted);box-shadow:none;margin-top:10px" onclick="closeSheet('tplOverlay')">Close</button>
+  </div>
+</div>
+
+<!-- BULK SEND BAR -->
+<div class="bulk-bar" id="bulkBar">
+  <div class="bulk-top">
+    <span class="bulk-count" id="bulkCount">0 selected</span>
+    <button class="bulk-clear" onclick="clearSelection()">✕ Cancel</button>
+  </div>
+  <div class="bulk-actions">
+    <button class="bulk-send" onclick="bulkSend()">📤 WhatsApp pe Bhejo</button>
+    <button class="bulk-copy" onclick="bulkCopyLinks()">🔗 Links Copy</button>
   </div>
 </div>
 
@@ -281,8 +354,9 @@ async function loadFromSheets(){
 /* ── State ── */
 const DEF_STAGES=['Awareness','Interested','Site Visit','Offer / Urgency','Closing'];
 const DEF_COLONIES=['Vinayak Residency','Gopal Vihar Colony','General'];
-let data={stages:[...DEF_STAGES],colonies:[...DEF_COLONIES],posters:[]};
+let data={stages:[...DEF_STAGES],colonies:[...DEF_COLONIES],posters:[],templates:{}};
 let activeStage='all',activeColony='all',curType='image',editId=null;
+let selectMode=false, selectedIds=new Set();
 const $=id=>document.getElementById(id);
 
 /* ── Load ── */
@@ -295,6 +369,7 @@ async function load(){
   if(!data.stages||!data.stages.length)data.stages=[...DEF_STAGES];
   if(!data.colonies||!data.colonies.length)data.colonies=[...DEF_COLONIES];
   if(!data.posters)data.posters=[];
+  if(!data.templates)data.templates={};
   buildChips();render();
 }
 
@@ -329,6 +404,7 @@ function render(){
   }).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
   $('countTxt').textContent=list.length+(list.length===1?' poster':' posters');
   const wrap=$('gridWrap');
+  wrap.className=selectMode?'sel-mode':'';
   if(!data.posters.length){wrap.innerHTML=emptyState('No posters yet','Tap + Add Poster to get started');return;}
   if(!list.length){wrap.innerHTML=emptyState('No results','Try a different filter or search term');return;}
   wrap.innerHTML='<div class="grid">'+list.map(cardHTML).join('')+'</div>';
@@ -340,10 +416,11 @@ function emptyState(h,t){
 
 function cardHTML(p,i){
   const img=p.imageUrl?driveUrl(p.imageUrl):'';
+  const isSel=selectedIds.has(p.id);
   const thumb=p.type==='image'
-    ?'<img src="'+img+'" alt="" loading="lazy" onclick="openPreview(\''+p.id+'\')" onerror="this.style.opacity=\'.2\'">'
-    :'<div class="vidicon" onclick="openVideo(\''+p.id+'\')"><div class="play"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div></div>';
-  return'<div class="card" style="animation-delay:'+Math.min(i*40,400)+'ms"><div class="thumbwrap">'+thumb+'<span class="badge colony">'+(p.colony||'General')+'</span></div><div class="meta"><div class="title">'+(p.title||'Untitled')+'</div></div><div class="acts"><button class="send" onclick="sendPoster(\''+p.id+'\')">📤 Send</button><button class="iconbtn" onclick="editPoster(\''+p.id+'\')">✎</button><button class="iconbtn" onclick="delPoster(\''+p.id+'\')">🗑</button></div></div>';
+    ?'<img src="'+img+'" alt="" loading="lazy" onclick="cardClick(\''+p.id+'\')" onerror="this.style.opacity=\'.2\'">'
+    :'<div class="vidicon" onclick="cardClick(\''+p.id+'\')"><div class="play"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div></div>';
+  return'<div class="card'+(isSel?' selected':'')+'" style="animation-delay:'+Math.min(i*40,400)+'ms"><div class="thumbwrap">'+thumb+'<div class="sel-cb'+(isSel?' checked':'')+'" onclick="toggleCard(\''+p.id+'\')">'+(isSel?'✓':'')+'</div><span class="badge colony">'+(p.colony||'General')+'</span></div><div class="meta"><div class="title">'+(p.title||'Untitled')+'</div></div><div class="acts"><button class="send" onclick="sendPoster(\''+p.id+'\')">📤 Send</button><button class="iconbtn" title="Download" onclick="downloadPoster(\''+p.id+'\')">📥</button><button class="iconbtn" onclick="editPoster(\''+p.id+'\')">✎</button><button class="iconbtn" onclick="delPoster(\''+p.id+'\')">🗑</button></div></div>';
 }
 
 /* ── Dial ── */
@@ -372,7 +449,48 @@ async function sendPoster(id){
 
 function downloadPoster(id){
   const p=data.posters.find(x=>x.id===id);if(!p||!p.imageUrl)return toast('No image link');
-  window.open(driveUrl(p.imageUrl),'_blank');
+  // Extract file ID from Drive link
+  const link=p.imageUrl;
+  let fileId='';
+  const m1=link.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  const m2=link.match(/open\?id=([a-zA-Z0-9_-]+)/);
+  const m3=link.match(/id=([a-zA-Z0-9_-]+)/);
+  const m4=link.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if(m1)fileId=m1[1];
+  else if(m2)fileId=m2[1];
+  else if(m3)fileId=m3[1];
+  else if(m4)fileId=m4[1];
+
+  if(fileId){
+    // Use proper download URL
+    const downloadUrl='https://drive.google.com/uc?export=download&id='+fileId;
+    const a=document.createElement('a');
+    a.href=downloadUrl;
+    a.download=(p.title||'poster').replace(/[^a-z0-9]/gi,'_')+'.jpg';
+    a.target='_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } else {
+    // Fallback - open in new tab
+    window.open(driveUrl(p.imageUrl),'_blank');
+  }
+
+  // Copy caption + open WhatsApp
+  const cap=p.caption||'';
+  const n=getNum();
+  if(cap){
+    copyText(cap);
+    setTimeout(()=>{
+      if(n.length===10)window.open('https://wa.me/91'+n,'_blank');
+      toast('📥 Download shuru! Caption copy ho gaya — WhatsApp mein image attach karke paste karo.');
+    },600);
+  } else {
+    setTimeout(()=>{
+      if(n.length===10)window.open('https://wa.me/91'+n,'_blank');
+      toast('📥 Download shuru! WhatsApp mein image attach karke bhejo.');
+    },600);
+  }
 }
 
 /* ── Preview ── */
@@ -488,11 +606,144 @@ async function delCat(kind,name){
 /* ── Utilities ── */
 function openSheet(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
 function closeSheet(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
-['addOverlay','manageOverlay'].forEach(id=>{
+['addOverlay','manageOverlay','tplOverlay'].forEach(id=>{
   document.getElementById(id).addEventListener('click',e=>{if(e.target.id===id)closeSheet(id);});
 });
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);}
 function copyText(t){return navigator.clipboard?navigator.clipboard.writeText(t):Promise.resolve();}
+
+/* ── Multi-Select ── */
+function toggleSelectMode(){
+  selectMode=!selectMode;
+  selectedIds.clear();
+  const btn=$('selToggleBtn');
+  btn.classList.toggle('active',selectMode);
+  btn.textContent=selectMode?'✕ Cancel Select':'☑️ Select';
+  document.getElementById('gridWrap').classList.toggle('sel-mode',selectMode);
+  updateBulkBar();
+  render();
+}
+
+function cardClick(id){
+  if(selectMode){toggleCard(id);}
+  else{
+    const p=data.posters.find(x=>x.id===id);
+    if(p&&p.type==='video')openVideo(id);
+    else openPreview(id);
+  }
+}
+
+function toggleCard(id){
+  if(selectedIds.has(id))selectedIds.delete(id);
+  else selectedIds.add(id);
+  updateBulkBar();
+  render();
+}
+
+function updateBulkBar(){
+  const bar=$('bulkBar');
+  const n=selectedIds.size;
+  if(selectMode&&n>0){bar.classList.add('open');}
+  else{bar.classList.remove('open');}
+  $('bulkCount').textContent=n+' poster'+(n===1?'':' selected kiye');
+}
+
+function clearSelection(){
+  selectMode=false;
+  selectedIds.clear();
+  $('selToggleBtn').classList.remove('active');
+  $('selToggleBtn').textContent='☑️ Select';
+  document.getElementById('gridWrap').classList.remove('sel-mode');
+  $('bulkBar').classList.remove('open');
+  render();
+}
+
+async function bulkSend(){
+  if(!selectedIds.size)return;
+  const posters=data.posters.filter(p=>selectedIds.has(p.id));
+  const links=posters.map(p=>{
+    const cap=p.caption?p.caption+'\n\n':'';
+    if(p.type==='video')return cap+(p.url||'');
+    return cap+(p.imageUrl?driveUrl(p.imageUrl):'');
+  }).filter(Boolean).join('\n\n---\n\n');
+  const n=getNum();
+  await copyText(links);
+  if(n.length===10){
+    setTimeout(()=>{window.open('https://wa.me/91'+n+'?text='+encodeURIComponent(links),'_blank');},300);
+    toast(posters.length+' poster links copied + WhatsApp open!');
+  }else{
+    toast(posters.length+' poster links copied! WhatsApp mein paste karo.');
+  }
+}
+
+async function bulkCopyLinks(){
+  if(!selectedIds.size)return;
+  const posters=data.posters.filter(p=>selectedIds.has(p.id));
+  const links=posters.map(p=>p.type==='video'?(p.url||''):(p.imageUrl?driveUrl(p.imageUrl):'')).filter(Boolean).join('\n');
+  await copyText(links);
+  toast(posters.length+' links copy ho gaye!');
+}
+
+/* ── Templates ── */
+function openTemplates(){
+  fillTplStageSelect();
+  renderTemplates();
+  openSheet('tplOverlay');
+}
+
+function fillTplStageSelect(){
+  $('tplStageSelect').innerHTML=data.stages.map(s=>'<option value="'+esc(s)+'">'+s+'</option>').join('');
+}
+
+function renderTemplates(){
+  const wrap=$('tplList');
+  let html='';
+  data.stages.forEach((stage,si)=>{
+    const tpls=(data.templates[stage]||[]);
+    const colors=['#E8820C','#2563eb','#16a34a','#7c3aed','#dc2626'];
+    const col=colors[si%colors.length];
+    html+='<div class="tpl-section"><div class="tpl-section-head"><h4><span class="tpl-stage-dot" style="background:'+col+'"></span>'+stage+'</h4><span style="font-size:11px;color:var(--muted);font-weight:600;">'+tpls.length+' template'+(tpls.length===1?'':'s')+'</span></div>';
+    if(!tpls.length){html+='<div class="tpl-empty">Koi template nahi — neeche add karo</div>';}
+    tpls.forEach((t,ti)=>{
+      html+='<div class="tpl-card"><div class="tpl-body">'+t.replace(/\n/g,'<br>')+'</div><div class="tpl-actions"><button class="tpl-copy" onclick="copyTpl(\''+esc(stage)+'\','+ti+')">📋 Copy</button><button class="tpl-del" onclick="delTpl(\''+esc(stage)+'\','+ti+')">🗑</button></div></div>';
+    });
+    html+='</div>';
+  });
+  wrap.innerHTML=html;
+}
+
+async function addTemplate(){
+  const stage=$('tplStageSelect').value;
+  const msg=$('tplMsgInput').value.trim();
+  if(!msg)return toast('Message type karo pehle');
+  if(!data.templates[stage])data.templates[stage]=[];
+  data.templates[stage].push(msg);
+  $('tplMsgInput').value='';
+  await saveIndex();
+  renderTemplates();
+  toast('Template save ho gaya! ✅');
+}
+
+async function delTpl(stage,idx){
+  if(!confirm('Ye template delete karo?'))return;
+  data.templates[stage].splice(idx,1);
+  await saveIndex();
+  renderTemplates();
+  toast('Template delete ho gaya');
+}
+
+async function copyTpl(stage,idx){
+  const msg=(data.templates[stage]||[])[idx];
+  if(!msg)return;
+  await copyText(msg);
+  const n=getNum();
+  if(n.length===10){
+    setTimeout(()=>{window.open('https://wa.me/91'+n+'?text='+encodeURIComponent(msg),'_blank');},300);
+    toast('Copy + WhatsApp open! ✅');
+  }else{
+    toast('Template copy ho gaya! WhatsApp mein paste karo 📋');
+  }
+}
 
 load();
 </script>
